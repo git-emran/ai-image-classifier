@@ -1,0 +1,21 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai_analysis_backend
+    # Mount the backend directory into the container for easy development
+    volumes:
+      - ./backend:/app/backend
+    # Expose port 8000 for the FastAPI server
+    ports:
+      - "8000:8000"
+    # Command to run the Uvicorn ASGI server
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      # Placeholder for API Key. In a real app, use a secret manager.
+      - GEMINI_API_KEY=
+      # Placeholder for model weight path, if needed later
+      - YOLO_MODEL_PATH=./yolov8n.pt
+    # Ensures the backend restarts if it crashes
+    restart: always

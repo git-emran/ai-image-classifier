@@ -1,0 +1,57 @@
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.venv/
+venv/
+ENV/
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+*.sqlite3
+*.db
+
+# =========================
+# Node / React / Next.js
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.next/
+out/
+dist/
+build/
+
+# =========================
+# Docker
+# =========================
+*.log
+*.pid
+docker-compose.override.yml
+docker-compose.override.yaml
+Dockerfile.dev
+.docker/
+tmp/
+*.tar
+*.img
+
+# =========================
+# YOLO / AI Models
+# =========================
+*.pt
+*.weights
+*.h5
+*.ckpt
+runs/
+results/
+data/
+logs/
+__pycache__/
