@@ -1,4 +1,5 @@
 services:
+  # 1. Backend API Service
   api:
     build:
       context: .
@@ -13,8 +14,9 @@ services:
     # Command to run the Uvicorn ASGI server
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
     environment:
-      # Placeholder for API Key. In a real app, use a secret manager.
-      - GEMINI_API_KEY=
+      # !! CRITICAL: SET YOUR GEMINI API KEY HERE !!
+      # Replace the empty string below with your actual Gemini API Key
+      - GEMINI_API_KEY=AIzaSyCIro5b52CgkseccRu9J39quaVh29uWWDw
       # Placeholder for model weight path, if needed later
       - YOLO_MODEL_PATH=./yolov8n.pt
     # Ensures the backend restarts if it crashes
