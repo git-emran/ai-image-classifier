@@ -1,54 +1,43 @@
-// LoginPage.tsx (Modified to include Switch to Sign Up Button)
+// src/components/auth/LoginPage.tsx
 'use client'
-import { useState } from "react";
-import { useAuth } from "./AuthContext";
-import { Camera, Loader2 } from "lucide-react";
 
-// Define the component props to accept the function that switches the view
-interface LoginPageProps {
-  onSwitchToSignup: () => void;
-}
+import React, { useState } from 'react';
+import { Camera, Loader2 } from 'lucide-react';
+import { useAuth } from './AuthContext';
 
-const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignup }) => {
+const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  // Assuming useAuth now returns a login function that throws a Firebase error object
-  const { login } = useAuth();
+  const [isSignup, setIsSignup] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { login, signup } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setError('');
 
-    if (isSubmitting || !email || !password) {
-      setError('Please enter both email and password.');
+    if (!email || !password) {
+      setError('Please enter both email and password');
       return;
     }
 
-    setIsSubmitting(true);
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
 
+    setLoading(true);
     try {
-      await login(email, password);
-      // If successful, AuthProvider handles state change and redirection
-    } catch (err: any) {
-      let errorMessage = 'Login failed. Please check your credentials.';
-
-      // Handle common Firebase Auth error codes
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        // ✅ Specific error message for wrong credentials
-        errorMessage = 'Invalid email or password. Please check your details.';
-      } else if (err.code === 'auth/invalid-email') {
-        errorMessage = 'The email address is not valid.';
-      } else if (err.code === 'auth/too-many-requests') {
-        errorMessage = 'Access temporarily blocked due to too many failed login attempts.';
+      if (isSignup) {
+        await signup(email, password);
       } else {
-        console.error("Firebase Login Error:", err);
+        await login(email, password);
       }
-
-      setError(errorMessage);
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
@@ -68,34 +57,33 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignup }) => {
           AI-powered image analysis and chat
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="email">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Email
             </label>
             <input
-              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="user@example.com"
-              disabled={isSubmitting}
+              placeholder="you@example.com"
+              disabled={loading}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="password">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Password
             </label>
             <input
-              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && !loading && handleSubmit(e as any)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               placeholder="••••••••"
-              disabled={isSubmitting}
+              disabled={loading}
             />
           </div>
 
@@ -106,36 +94,35 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignup }) => {
           )}
 
           <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`w-full flex items-center justify-center py-2 rounded-lg font-medium transition-colors ${isSubmitting
-              ? 'bg-indigo-400 text-white cursor-not-allowed'
-              : 'bg-indigo-600 text-white hover:bg-indigo-700'
-              }`}
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {isSubmitting ? (
+            {loading ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Signing In...
+                <Loader2 className="w-5 h-5 animate-spin" />
+                {isSignup ? 'Creating Account...' : 'Signing In...'}
               </>
             ) : (
-              'Sign In'
+              isSignup ? 'Sign Up' : 'Sign In'
             )}
           </button>
-        </form>
 
-        {/* ✅ NEW: Button to switch to the Signup page */}
-        <p className="text-center text-sm text-gray-600 mt-6">
-          Dont have an account?
-          <button
-            type="button"
-            onClick={onSwitchToSignup}
-            disabled={isSubmitting}
-            className="ml-1 text-indigo-600 hover:text-indigo-800 font-medium transition-colors cursor-pointer"
-          >
-            Sign Up
-          </button>
-        </p>
+          <div className="text-center">
+            <button
+              onClick={() => {
+                setIsSignup(!isSignup);
+                setError('');
+              }}
+              className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors"
+              disabled={loading}
+            >
+              {isSignup
+                ? 'Already have an account? Sign In'
+                : "Don't have an account? Sign Up"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

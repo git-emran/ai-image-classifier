@@ -2,7 +2,6 @@
 
 import { useAuth } from "@/components/auth";
 import { Loader2 } from "lucide-react";
-import LoginPage from "@/components/auth/LoginPage";
 import AuthProvider from "@/components/auth/AuthContext";
 import Dashboard from "@/components/dashboard/Dashboard";
 import AuthPage from "@/components/auth/AuthPage";
