@@ -21,8 +21,8 @@ app = FastAPI(
 # --- Configuration ---
 # Assuming GEMINI_API_KEY is available as an environment variable in the container
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent"
-MODEL_NAME = "gemini-2.5-flash-preview-09-2025"
+MODEL_NAME = "gemini-2.0-flash"
+GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent"
 
 
 # --- Pydantic Models ---
@@ -71,7 +71,6 @@ def pydantic_to_gemini_schema(raw_schema: dict) -> dict:
     # Extract definitions used for references
     definitions = raw_schema.get("$defs", {})
 
-    # Get the root schema (main object structure) and remove unsupported root keys
     gemini_schema = copy.deepcopy(raw_schema)
     unsupported_keys = ["$defs", "title", "description", "$schema"]
     for key in unsupported_keys:
