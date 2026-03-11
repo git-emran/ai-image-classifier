@@ -16,7 +16,7 @@ services:
     environment:
       # !! CRITICAL: SET YOUR GEMINI API KEY HERE !!
       # Replace the empty string below with your actual Gemini API Key
-      - GEMINI_API_KEY=AIzaSyCIro5b52CgkseccRu9J39quaVh29uWWDw
+      - GEMINI_API_KEY=AIzaSyBqfJTW2TmSViB6U-2ybu_geTxl6Lglqgk
       # Placeholder for model weight path, if needed later
       - YOLO_MODEL_PATH=./yolov8n.pt
     # Ensures the backend restarts if it crashes

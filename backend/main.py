@@ -21,8 +21,8 @@ app = FastAPI(
 # --- Configuration ---
 # Assuming GEMINI_API_KEY is available as an environment variable in the container
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-MODEL_NAME = "gemini-2.0-flash"
-GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent"
+MODEL_NAME = "gemini-2.5-flash"
+GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1alpha/models/{MODEL_NAME}:generateContent"
 
 
 # --- Pydantic Models ---
@@ -126,13 +126,15 @@ def call_gemini_api(payload: dict, max_retries: int = 3, delay: int = 1):
 
     for attempt in range(max_retries):
         try:
+            logging.info(f"Sending payload to Gemini: {json.dumps(payload)}")
             response = requests.post(
                 api_call_url, headers={"Content-Type": "application/json"}, json=payload
             )
 
             # Check for API-specific errors, which often return 400
             if response.status_code == 400:
-                logging.error(f"Gemini API 400 Error Response: {response.text}")
+                error_msg = response.text
+                logging.error(f"Gemini API 400 Error Response: {error_msg}")
                 # Re-raise the error to include the 400 detail in the final 500
                 response.raise_for_status()
 
@@ -196,10 +198,18 @@ def health_check():
     }
 
 
+def pad_base64(b64_string: str) -> str:
+    """Adds missing padding to a base64 string if necessary."""
+    padding_needed = len(b64_string) % 4
+    if padding_needed:
+        b64_string += '=' * (4 - padding_needed)
+    return b64_string
+
+
 # --- Gemini Vision Analysis Endpoint (FINAL FIX for Schema Errors) ---
 @app.post("/analyze-objects", response_model=AnalysisResults)
 def analyze_objects(request_data: ImageAnalysisRequest):
-    clean_base64 = request_data.file_data.strip()
+    clean_base64 = pad_base64(request_data.file_data.strip())
 
     user_instruction_for_structured_output = (
         "Analyze this image. Your sole task is to generate a single JSON object "
@@ -219,21 +229,18 @@ def analyze_objects(request_data: ImageAnalysisRequest):
             {
                 "role": "user",
                 "parts": [
-                    # Image data part
                     {
                         "inlineData": {
                             "mimeType": request_data.file_type,
                             "data": clean_base64,
                         }
                     },
-                    # Text instruction part
-                    {"text": user_instruction_for_structured_output},
+                    {"text": user_instruction_for_structured_output}
                 ],
             },
         ],
         "generationConfig": {
             "responseMimeType": "application/json",
-            # 3. Use the cleaned and transformed schema
             "responseSchema": gemini_schema,
         },
     }
@@ -248,7 +255,7 @@ def chat_with_image(request_data: ChatRequest):
     """
     Handles conversational requests, keeping the image data and history in context.
     """
-    clean_base64 = request_data.file_data.strip()
+    clean_base64 = pad_base64(request_data.file_data.strip())
 
     # Extract user prompt and previous history
     user_prompt = request_data.prompt
@@ -263,13 +270,10 @@ def chat_with_image(request_data: ChatRequest):
     # Reconstruct conversation history for the model
     contents = []
 
-    # 1. Add System Instruction as the first turn (standard chat pattern)
-    contents.append({"role": "system", "parts": [{"text": system_instruction}]})
-
-    # 2. Add previous history
+    # 1. Add previous history
     contents.extend(request_data.history)
 
-    # 3. Add the current user turn with the image
+    # 2. Add the current user turn with the image
     contents.append(
         {
             "role": "user",
@@ -286,6 +290,9 @@ def chat_with_image(request_data: ChatRequest):
     )
 
     payload = {
+        "systemInstruction": {
+            "parts": [{"text": system_instruction}]
+        },
         "contents": contents,
     }
 
@@ -314,6 +321,8 @@ def chat_with_image(request_data: ChatRequest):
             return {"response": text}
 
         except requests.exceptions.RequestException as e:
+            if "response" in locals() and response is not None and getattr(response, "text", None):
+                logging.error(f"Chat API 400 Error Response: {response.text}")
             logging.error(f"Chat API Request Error (Attempt {attempt + 1}): {e}")
             if attempt < max_retries - 1:
                 import time

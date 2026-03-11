@@ -1,8 +1,9 @@
 import { AnalysisResults } from "@/types";
 import { Message } from "@/types";
 import { useState } from "react";
-import { ChatHistory } from "@/types";
+import { ChatHistory, ImageData } from "@/types";
 import { Loader2, Send } from "lucide-react";
+import { apiService } from "@/services/api";
 
 interface ChatInterfaceProps {
   image: ImageData;
@@ -24,7 +25,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ image, analysisData }) =>
 
     try {
       const history: ChatHistory[] = messages.map(msg => ({
-        role: msg.role,
+        role: msg.role === 'assistant' ? 'model' : msg.role,
         parts: [{ text: msg.content }]
       }));
 
