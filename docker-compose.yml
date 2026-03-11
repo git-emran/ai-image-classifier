@@ -13,10 +13,9 @@ services:
       - "8000:8000"
     # Command to run the Uvicorn ASGI server
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    env_file:
+      - .env
     environment:
-      # !! CRITICAL: SET YOUR GEMINI API KEY HERE !!
-      # Replace the empty string below with your actual Gemini API Key
-      - GEMINI_API_KEY=AIzaSyBqfJTW2TmSViB6U-2ybu_geTxl6Lglqgk
       # Placeholder for model weight path, if needed later
       - YOLO_MODEL_PATH=./yolov8n.pt
     # Ensures the backend restarts if it crashes
